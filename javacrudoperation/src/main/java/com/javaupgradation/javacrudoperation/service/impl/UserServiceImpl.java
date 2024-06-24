@@ -2,7 +2,6 @@ package com.javaupgradation.javacrudoperation.service.impl;
 
 import com.javaupgradation.javacrudoperation.dto.UserDTO;
 import com.javaupgradation.javacrudoperation.entity.User;
-import com.javaupgradation.javacrudoperation.exception.ResourceNotFoundException;
 import com.javaupgradation.javacrudoperation.mapper.UserMapper;
 import com.javaupgradation.javacrudoperation.repository.UserRepository;
 import com.javaupgradation.javacrudoperation.service.UserService;
@@ -10,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,10 +26,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        return UserMapper.toDTO(user);
+    public Optional<UserDTO> getUserById(Long id) {
+        return userRepository.findById(id)
+                .map(UserMapper::toDTO);
     }
 
     @Override
@@ -39,18 +38,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        user.setName(userDTO.getName());
-        user.setEmail(userDTO.getEmail());
-        return UserMapper.toDTO(userRepository.save(user));
+    public Optional<UserDTO> updateUser(Long id, UserDTO userDTO) {
+        return userRepository.findById(id)
+                .map(user -> {
+                    user.setName(userDTO.getName());
+                    user.setEmail(userDTO.getEmail());
+                    return UserMapper.toDTO(userRepository.save(user));
+                });
     }
 
     @Override
-    public void deleteUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        userRepository.delete(user);
+    public boolean deleteUser(Long id) {
+        return userRepository.findById(id)
+                .map(user -> {
+                    userRepository.delete(user);
+                    return true;
+                })
+                .orElse(false);
     }
 }
