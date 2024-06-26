@@ -30,21 +30,25 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
+    public ResponseEntity<String> createUser(@Valid @RequestBody UserDTO userDTO) {
         UserDTO createdUser = userService.createUser(userDTO);
-        return ResponseEntity.ok(createdUser);
+        return ResponseEntity.ok("Record has been saved: " + createdUser);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
+    public ResponseEntity<String> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
         Optional<UserDTO> updatedUser = userService.updateUser(id, userDTO);
-        return updatedUser.map(ResponseEntity::ok)
+        return updatedUser.map(user -> ResponseEntity.ok("Record has been updated: " + user))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        boolean isDeleted = userService.deleteUser(id);
+        if (isDeleted) {
+            return ResponseEntity.ok("Record has been deleted");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
